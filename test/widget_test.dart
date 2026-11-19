@@ -1973,7 +1973,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('设置'), findsOneWidget);
-      expect(find.text('关于'), findsOneWidget);
+      expect(find.text('关于'), findsNothing);
       expect(find.text('自定义播放'), findsOneWidget);
       expect(find.text('版本检查'), findsNothing);
     });

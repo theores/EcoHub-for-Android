@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ecohub_android/utils/server_config_manager.dart';
+import 'package:ecohub_android/common/app_config.dart';
 import 'package:ecohub_android/utils/history_manager.dart';
 import 'package:ecohub_android/pages/splash_page.dart';
 import 'package:ecohub_android/pages/main_scaffold_page.dart';
@@ -11,6 +13,16 @@ import 'package:ecohub_android/components/notice_dialog.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('built-in source overrides a previously saved source', () async {
+    SharedPreferences.setMockInitialValues({
+      'server_base_url': 'https://old.example.com/api',
+    });
+    await ServerConfigManager.instance.init();
+    expect(await ServerConfigManager.instance.getServerUrl(), AppConfig.serverUrl);
+    expect(ServerConfigManager.instance.provideKey, 'wan');
+    expect(ServerConfigManager.instance.getApiBase(), 'https://tv.336824.xyz:666/api');
+  });
 
   group('HistoryManager migrateLegacy Tests', () {
     test('migrates unscoped film_history to scoped key when scoped key is empty', () async {
@@ -34,7 +46,7 @@ void main() {
 
       await ServerConfigManager.instance.init();
       final scopedKey = ServerConfigManager.instance.scopedKey('film_history');
-      expect(scopedKey, 'film_history@example.com');
+      expect(scopedKey, 'film_history@tv.336824.xyz:666');
 
       // Before migration
       final pref = ServerConfigManager.instance.preferences!;
@@ -58,7 +70,7 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'server_base_url': 'https://movie.demo.com/api',
         // Legacy entry saved under http origin
-        'film_history@http://movie.demo.com': jsonEncode({
+        'film_history@http://tv.336824.xyz:666': jsonEncode({
           'item2': {
             'id': 'item2',
             'name': 'HTTP Alias Movie',
@@ -76,16 +88,16 @@ void main() {
 
       await ServerConfigManager.instance.init();
       final scopedKey = ServerConfigManager.instance.scopedKey('film_history');
-      expect(scopedKey, 'film_history@movie.demo.com');
+      expect(scopedKey, 'film_history@tv.336824.xyz:666');
 
       final pref = ServerConfigManager.instance.preferences!;
       expect(pref.getString(scopedKey), isNull);
-      expect(pref.getString('film_history@http://movie.demo.com'), isNotNull);
+      expect(pref.getString('film_history@http://tv.336824.xyz:666'), isNotNull);
 
       await HistoryManager.migrateLegacy();
 
       expect(pref.getString(scopedKey), isNotNull);
-      expect(pref.getString('film_history@http://movie.demo.com'), isNull);
+      expect(pref.getString('film_history@http://tv.336824.xyz:666'), isNull);
 
       final item = await HistoryManager.find('item2');
       expect(item, isNotNull);
@@ -94,8 +106,15 @@ void main() {
   });
 
   group('SplashPage Layout & Entry Pipeline Tests', () {
-    testWidgets('SplashPage renders StartIconImage and EcoHub title and replaces to server_config when no url', (tester) async {
+    testWidgets('SplashPage uses built-in source and opens server_config on connection failure', (tester) async {
       SharedPreferences.setMockInitialValues({});
+      PackageInfo.setMockInitialValues(
+        appName: AppConfig.name,
+        packageName: 'com.ecohub.ecohub',
+        version: '1.1.5',
+        buildNumber: '9',
+        buildSignature: '',
+      );
       await ServerConfigManager.instance.init();
 
       await tester.pumpWidget(
@@ -109,11 +128,13 @@ void main() {
       );
 
       // Initial frame renders splash UI
-      expect(find.text('EcoHub'), findsOneWidget);
+      expect(find.text('余以为的小站'), findsOneWidget);
       expect(find.text('正在接入服务...'), findsOneWidget);
 
-      // Advance time beyond minSplashTime (800ms)
-      await tester.pump(const Duration(milliseconds: 850));
+      // Let the built-in source probes fail under the test HTTP client.
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
       await tester.pumpAndSettle();
 
       // Should have navigated to /server_config

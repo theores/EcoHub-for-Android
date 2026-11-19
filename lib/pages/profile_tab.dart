@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../common/app_config.dart';
 import '../common/app_theme.dart';
 import '../models/film_models.dart';
 import '../api/film_api.dart';
@@ -228,12 +229,10 @@ class _ProfileTabState extends State<ProfileTab> {
                     ),
                   ),
                   ProfileSiteCard(
-                    siteName: _config.siteName,
-                    logoUrl: ServerConfigManager.instance.resolveMediaUrl(_config.logo),
+                    siteName: AppConfig.name,
+                    logoUrl: '',
                     sourceHost: _sourceHost(),
-                    onOpenSource: () {
-                      Navigator.pushNamed(context, '/server_config').then((_) => _reload());
-                    },
+                    onOpenSource: null,
                     onOpenFavorite: () => Navigator.pushNamed(context, '/favorite'),
                     onOpenHistory: () => Navigator.pushNamed(context, '/history'),
                   ),
@@ -265,14 +264,21 @@ class _ProfileTabState extends State<ProfileTab> {
                           title: '设置',
                           onTap: () => NavUtil.openSettings(context),
                         ),
-                        _menuLine(),
-                        _buildMenuRow(
-                          icon: Icons.info_outline_rounded,
-                          title: '关于',
-                          extra: _updateInfo.hasUpdate ? '发现新版本 v${_updateInfo.latestVersion}' : '',
-                          hasBadge: _updateInfo.hasUpdate,
-                          extraHighlight: _updateInfo.hasUpdate,
-                          onTap: () => NavUtil.openAbout(context),
+                        Visibility(
+                          visible: false,
+                          child: Column(
+                            children: [
+                              _menuLine(),
+                              _buildMenuRow(
+                                icon: Icons.info_outline_rounded,
+                                title: '关于',
+                                extra: _updateInfo.hasUpdate ? '发现新版本 v${_updateInfo.latestVersion}' : '',
+                                hasBadge: _updateInfo.hasUpdate,
+                                extraHighlight: _updateInfo.hasUpdate,
+                                onTap: () => NavUtil.openAbout(context),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),

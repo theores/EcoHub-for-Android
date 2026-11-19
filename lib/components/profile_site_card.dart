@@ -9,7 +9,7 @@ class ProfileSiteCard extends StatelessWidget {
   final String siteName;
   final String logoUrl;
   final String sourceHost;
-  final VoidCallback onOpenSource;
+  final VoidCallback? onOpenSource;
   final VoidCallback onOpenFavorite;
   final VoidCallback onOpenHistory;
 
@@ -163,15 +163,16 @@ class ProfileSiteCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: const Color(0x0AFFFFFF),
-                    borderRadius: BorderRadius.circular(14),
+                if (onOpenSource != null)
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: const Color(0x0AFFFFFF),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.chevron_right_rounded, size: 14, color: AppTheme.textMuted),
                   ),
-                  child: const Icon(Icons.chevron_right_rounded, size: 14, color: AppTheme.textMuted),
-                ),
               ],
             ),
           ),

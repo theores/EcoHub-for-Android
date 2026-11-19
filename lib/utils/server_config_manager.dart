@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/server_compat.dart';
+import '../common/app_config.dart';
 
 const String _keyServerUrl = 'server_base_url';
 const String _keyServerHistory = 'server_url_history';
@@ -12,7 +13,7 @@ const int _maxServerHistory = 10;
 class ServerConfigManager {
   static final ServerConfigManager _instance = ServerConfigManager._internal();
   SharedPreferences? _pref;
-  String _cachedUrl = '';
+  String _cachedUrl = AppConfig.serverUrl;
   String _cachedDeviceId = '';
 
   factory ServerConfigManager() => _instance;
@@ -23,7 +24,7 @@ class ServerConfigManager {
   Future<void> init() async {
     try {
       _pref = await SharedPreferences.getInstance();
-      _cachedUrl = _pref?.getString(_keyServerUrl) ?? '';
+      _cachedUrl = AppConfig.serverUrl;
       await ServerCompat.instance.attachPreferences(storageScope());
     } catch (_) {}
   }
@@ -46,7 +47,7 @@ class ServerConfigManager {
   Future<String> getServerUrl() async {
     if (_cachedUrl.isNotEmpty) return _cachedUrl;
     if (_pref == null) await init();
-    _cachedUrl = _pref?.getString(_keyServerUrl) ?? '';
+    _cachedUrl = AppConfig.serverUrl;
     return _cachedUrl;
   }
 

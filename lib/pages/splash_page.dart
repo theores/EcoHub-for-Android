@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../common/app_config.dart';
 import '../common/app_theme.dart';
 import '../utils/server_config_manager.dart';
 import '../utils/app_version_util.dart';
@@ -128,7 +129,7 @@ class _SplashPageState extends State<SplashPage> {
                   const StartIconImage(size: 84, radius: 20),
                   const SizedBox(height: 16),
                   const Text(
-                    'EcoHub',
+                    AppConfig.name,
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
